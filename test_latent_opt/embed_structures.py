@@ -69,6 +69,12 @@ def main():
             coordinates = coordinates.to(device)
             residue_index = residue_index.to(device)
             z, tokens = encoder.encode(coordinates, residue_index=residue_index)
+            z = z.cpu().detach()
+            tokens = tokens.cpu().detach()
+
+            # remove tensors from cuda memory
+            del coordinates
+            del residue_index
 
             yield {
                 'id': row['id'],
