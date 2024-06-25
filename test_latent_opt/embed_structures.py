@@ -57,6 +57,7 @@ def main():
         device = 'cpu'
     
     encoder = load_local_model(ESM3_STRUCTURE_ENCODER_V0, device=device)
+    logger.info(f"Embedding on device {device}")
 
     # build a dataset by looping through sequences
     def generator():
