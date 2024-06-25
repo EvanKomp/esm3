@@ -89,7 +89,7 @@ def main():
     ds = datasets.Dataset.from_generator(generator)
 
     # convert to data dict over splits
-    unique_splits = np.unique(ds['split'])
+    unique_splits = list(np.unique(ds['split']).astype(int))
     data_dict = {}
     for s in unique_splits:
         data_dict[s] = ds.filter(lambda x: x['split'] == s)
