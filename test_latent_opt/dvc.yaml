@@ -1,0 +1,69 @@
+# test_latent_opt/dvc.yaml
+
+
+stages:
+  embed_structures:
+    # embed experimental structures with ESM
+    cmd: python embed_structures.py
+    params:
+    - esm.model_name
+    deps:
+    - embed_structures.py
+    - data/label_data.csv
+    - data/structures/
+    outs:
+    - data/embedded_data/
+
+  train_latent_opt_cv:
+    # train a small predictor on structure embeddings to predict the label data
+    # evaluate in cross validation
+    # if we cannot get decent predictions then there is no hope
+    # of optimizing embeddings
+    cmd: python train_latent_opt.py
+    params:
+    - latent_model.module
+    deps:
+    - train_latent_opt.py
+    - data/embedded_data/
+    - data/label_data.csv
+    outs:
+    - data/latent_opt_model/
+  train_latent_opt:
+    # train a small predictor on structure embeddings of whole dataset to predict the label data
+    cmd: python train_latent_opt.py
+    params:
+    - latent_model.module
+    deps:
+    - train_latent_opt.py
+    - data/embedded_data/
+    - data/label_data.csv
+    outs:
+    - data/latent_opt_model/
+  optimize_embeddings:
+    # run gradient descent of structure embeddings according to predictor
+    # score, produce embeddings that are "better" at activity
+    cmd: python optimize_embeddings.py
+    params:
+    - latent_model.module
+    - optimization.proteins_to_optimize
+    - optimization.num_steps_per_trajectory
+    - optimization.num_trajectories_per_protein
+    - optimization.lr
+    - optimizattion.optimizer
+    deps:
+    - optimize_embeddings.py
+    - data/latent_opt_model/
+    - data/embedded_data/
+    outs:
+    - data/optimized_embeddings/
+  translate_embeddings:
+    # translate optimized embeddings back to sequences and structure with ESM decoder
+    cmd: python translate_embeddings.py
+    params:
+    - esm.model_name
+    deps:
+    - translate_embeddings.py
+    - data/optimized_embeddings/
+    outs:
+    - data/designs/
+

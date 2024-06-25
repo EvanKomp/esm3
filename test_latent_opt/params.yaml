@@ -1,0 +1,14 @@
+# test_latent_opt/params.yaml
+esm:
+  model_name: esm3_sm_open_v1
+
+latent_model:
+  module: linear
+optimization:
+  proteins_to_optimize: []
+  num_steps_per_trajectory: 100
+  num_trajectories_per_protein: 10
+  lr: 0.1
+  optimizer: adam
+
+

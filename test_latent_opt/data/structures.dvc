@@ -1,0 +1,6 @@
+outs:
+- md5: d8a27b3d6146eefb6d193443eb796a3e.dir
+  size: 53232036
+  nfiles: 138
+  hash: md5
+  path: structures
