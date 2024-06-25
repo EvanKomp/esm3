@@ -10,6 +10,7 @@ Embed input structures with ESM3's structure VAE
 import os
 
 import pandas as pd
+import numpy as np
 import datasets
 import torch
 
@@ -88,7 +89,7 @@ def main():
     ds = datasets.Dataset.from_generator(generator)
 
     # convert to data dict over splits
-    unique_splits = ds['split'].unique()
+    unique_splits = np.unique(ds['split'])
     data_dict = {}
     for s in unique_splits:
         data_dict[s] = ds.filter(lambda x: x['split'] == s)
