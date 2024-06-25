@@ -26,8 +26,8 @@ stages:
     - train_latent_opt.py
     - data/embedded_data/
     - data/label_data.csv
-    outs:
-    - data/latent_opt_model/
+    metrics:
+    - data/cv_results.json
   train_latent_opt:
     # train a small predictor on structure embeddings of whole dataset to predict the label data
     cmd: python train_latent_opt.py
