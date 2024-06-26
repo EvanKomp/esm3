@@ -1,6 +1,7 @@
 # test_latent_opt/params.yaml
 esm:
   model_name: esm3_sm_open_v1
+  embeddings: structure_vae # one of structure_vae or esm
 
 latent_model:
   module: linear

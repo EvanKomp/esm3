@@ -17,6 +17,11 @@ import torch
 from esm.utils.structure.protein_chain import ProteinChain
 from esm.pretrained import load_local_model
 from esm.utils.constants.models import ESM3_STRUCTURE_ENCODER_V0
+from esm.models.esm3 import ESM3
+from esm.sdk.api import (
+    ESMProtein,
+    ESMProteinTensor,
+)
 # from huggingface_hub import login
 
 import dvc.api
@@ -56,36 +61,67 @@ def main():
         device = 'cuda'
     else:
         device = 'cpu'
+
+    if PARAMS['esm']['embeddings'] == 'structure_vae':
     
-    encoder = load_local_model(ESM3_STRUCTURE_ENCODER_V0, device=device)
-    logger.info(f"Embedding on device {device}")
+        encoder = load_local_model(ESM3_STRUCTURE_ENCODER_V0, device=device)
+        logger.info(f"Embedding on device {device}")
 
-    # build a dataset by looping through sequences
-    def generator():
-        for _, row in label_data.iterrows():
-            if row['id'] not in structure_file_map:
-                continue
-            p = ProteinChain.from_pdb(structure_file_map[row['id']])
-            coordinates, plddt, residue_index = p.to_structure_encoder_inputs()
-            coordinates = coordinates.to(device)
-            residue_index = residue_index.to(device)
-            z, tokens = encoder.encode(coordinates, residue_index=residue_index)
-            # convert to base dtypes
-            z = z.cpu().detach().numpy().astype(float)
-            tokens = tokens.cpu().detach().numpy().astype(int)
+        # build a dataset by looping through sequences
+        def generator():
+            for _, row in label_data.iterrows():
+                if row['id'] not in structure_file_map:
+                    continue
+                p = ProteinChain.from_pdb(structure_file_map[row['id']])
+                coordinates, plddt, residue_index = p.to_structure_encoder_inputs()
+                coordinates = coordinates.to(device)
+                residue_index = residue_index.to(device)
+                z, tokens = encoder.encode(coordinates, residue_index=residue_index)
+                # convert to base dtypes
+                z = z.cpu().detach().numpy().astype(float)
+                tokens = tokens.cpu().detach().numpy().astype(int)
 
-            # remove tensors from cuda memory
-            del coordinates
-            del residue_index
+                # remove tensors from cuda memory
+                del coordinates
+                del residue_index
 
-            yield {
-                'id': row['id'],
-                'sequence': row['sequence'],
-                'z': z,
-                'tokens': tokens,
-                'y': float(row['target']),
-                'split': int(row['cross_val_split'])
-            }
+                yield {
+                    'id': row['id'],
+                    'sequence': row['sequence'],
+                    'z': z,
+                    'tokens': tokens,
+                    'y': float(row['target']),
+                    'split': int(row['cross_val_split'])
+                }
+    elif PARAMS['esm']['embeddings'] == 'esm':
+        # here we use the embeddings from the whole transformer
+        model = ESM3.from_pretrained("esm3_sm_open_v1", device=torch.device("device"))
+
+        def generator():
+            for _, row in label_data.iterrows():
+                if row['id'] not in structure_file_map:
+                    continue
+                p = ProteinChain.from_pdb(structure_file_map[row['id']])
+                p = ESMProtein.from_protein_chain(p, with_annotations=True)
+                prompt = model.encode(p)
+                outs = model.forward(
+
+                    sequence_tokens=prompt.sequence.unsqueeze(0),
+                    structure_tokens=prompt.structure.unsqueeze(0),
+                    ss8_tokens=prompt.secondary_structure.unsqueeze(0),
+                    sasa_tokens=prompt.sasa.unsqueeze(0),
+                    structure_coords=prompt.coordinates.unsqueeze(0),
+                )
+                embeddings = outs.embeddings.cpu().detach().numpy().astype(float)
+                tokens = None
+                yield {
+                    'id': row['id'],
+                    'sequence': row['sequence'],
+                    'z': embeddings,
+                    'tokens': tokens,
+                    'y': float(row['target']),
+                    'split': int(row['cross_val_split'])}
+                                     
 
     ds = datasets.Dataset.from_generator(generator)
 

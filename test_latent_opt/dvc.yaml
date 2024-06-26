@@ -7,6 +7,7 @@ stages:
     cmd: python embed_structures.py
     params:
     - esm.model_name
+    - esm.embeddings
     deps:
     - embed_structures.py
     - data/label_data.csv
