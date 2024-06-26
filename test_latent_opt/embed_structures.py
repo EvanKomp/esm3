@@ -70,8 +70,9 @@ def main():
             coordinates = coordinates.to(device)
             residue_index = residue_index.to(device)
             z, tokens = encoder.encode(coordinates, residue_index=residue_index)
-            z = z.cpu().detach()
-            tokens = tokens.cpu().detach()
+            # convert to base dtypes
+            z = z.cpu().detach().numpy().astype(float)
+            tokens = tokens.cpu().detach().numpy().astype(int)
 
             # remove tensors from cuda memory
             del coordinates
@@ -82,17 +83,17 @@ def main():
                 'sequence': row['sequence'],
                 'z': z,
                 'tokens': tokens,
-                'y': row['target'],
-                'split': row['cross_val_split']
+                'y': float(row['target']),
+                'split': int(row['cross_val_split'])
             }
 
     ds = datasets.Dataset.from_generator(generator)
 
     # convert to data dict over splits
-    unique_splits = list(np.unique(ds['split']).astype(int))
+    unique_splits = [str(i) for i in list(set(ds['split']))]
     data_dict = {}
     for s in unique_splits:
-        data_dict[s] = ds.filter(lambda x: x['split'] == s)
+        data_dict[s] = ds.filter(lambda x: x['split'] == int(s))
     ds = datasets.DatasetDict(data_dict)
     logger.info(f"Split data into {ds}")
 

@@ -91,3 +91,26 @@ WARNING:__main__:ESM007 does not have a structure file
 WARNING:__main__:ESM005 does not have a structure file
 WARNING:__main__:ESM031 does not have a structure file
 INFO:__main__:Found 120 structures
+INFO:__main__:Embedding on device cuda
+INFO:__main__:Split data into DatasetDict({
+    0: Dataset({
+        features: ['id', 'sequence', 'z', 'tokens', 'y', 'split'],
+        num_rows: 23
+    })
+    1: Dataset({
+        features: ['id', 'sequence', 'z', 'tokens', 'y', 'split'],
+        num_rows: 28
+    })
+    2: Dataset({
+        features: ['id', 'sequence', 'z', 'tokens', 'y', 'split'],
+        num_rows: 23
+    })
+    3: Dataset({
+        features: ['id', 'sequence', 'z', 'tokens', 'y', 'split'],
+        num_rows: 25
+    })
+    4: Dataset({
+        features: ['id', 'sequence', 'z', 'tokens', 'y', 'split'],
+        num_rows: 21
+    })
+})

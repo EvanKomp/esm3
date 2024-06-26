@@ -1,0 +1,27 @@
+schema: '2.0'
+stages:
+  embed_structures:
+    cmd: python embed_structures.py
+    deps:
+    - path: data/label_data.csv
+      hash: md5
+      md5: 75d12e68d13fa398e2be4060bb9c809c
+      size: 71324
+    - path: data/structures/
+      hash: md5
+      md5: d8a27b3d6146eefb6d193443eb796a3e.dir
+      size: 53232036
+      nfiles: 138
+    - path: embed_structures.py
+      hash: md5
+      md5: a0fd41b48c2b2a2496d24a8e49e81627
+      size: 3686
+    params:
+      params.yaml:
+        esm.model_name: esm3_sm_open_v1
+    outs:
+    - path: data/embedded_data/
+      hash: md5
+      md5: 8381dc8608a49a243cb5f10742adbe7b.dir
+      size: 39825435
+      nfiles: 16
