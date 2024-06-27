@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 import datasets
 import torch
+import tqdm
 
 from esm.utils.structure.protein_chain import ProteinChain
 from esm.pretrained import load_local_model
@@ -53,8 +54,18 @@ def main():
             # check that the structure matches the sequence
             p = ProteinChain.from_pdb(structure_file_map[row['id']])
             if p.sequence != row['sequence']:
-                raise ValueError(f"Sequence in label_data.csv does not match sequence in {structure_file_map[row['id']]}")
+                if 'X' in row['sequence']:
+                    logger.warning(f"{row['id']} contains unknown AAs, dropping.")
+                    del structure_file_map[row['id']]
+                else:
+                    print(p.sequence, row['sequence'])
+                    raise ValueError(f"Sequence in label_data.csv does not match sequence in {structure_file_map[row['id']]}")
     logger.info(f"Found {len(structure_file_map)} structures")
+
+    # filter the labele data by only good structures
+    good_structures = label_data['id'].apply(lambda i: i in structure_file_map)
+    label_data = label_data[good_structures]
+    label_data.to_csv(os.path.join('data', 'clean_data.csv'))
     
     # load the model
     if torch.cuda.is_available():
@@ -69,9 +80,9 @@ def main():
 
         # build a dataset by looping through sequences
         def generator():
-            for _, row in label_data.iterrows():
-                if row['id'] not in structure_file_map:
-                    continue
+            for _, row in tqdm.tqdm(list(label_data.iterrows())):
+                # if row['id'] not in structure_file_map:
+                #     continue
                 p = ProteinChain.from_pdb(structure_file_map[row['id']])
                 coordinates, plddt, residue_index = p.to_structure_encoder_inputs()
                 coordinates = coordinates.to(device)
@@ -95,25 +106,26 @@ def main():
                 }
     elif PARAMS['esm']['embeddings'] == 'esm':
         # here we use the embeddings from the whole transformer
-        model = ESM3.from_pretrained("esm3_sm_open_v1", device=torch.device("device"))
+        model = ESM3.from_pretrained("esm3_sm_open_v1", device=torch.device(device))
 
         def generator():
-            for _, row in label_data.iterrows():
-                if row['id'] not in structure_file_map:
-                    continue
+            for _, row in tqdm.tqdm(list(label_data.iterrows())):
+                # if row['id'] not in structure_file_map:
+                #     continue
                 p = ProteinChain.from_pdb(structure_file_map[row['id']])
-                p = ESMProtein.from_protein_chain(p, with_annotations=True)
+                p = ESMProtein.from_protein_chain(p, with_annotations=False)
                 prompt = model.encode(p)
                 outs = model.forward(
 
                     sequence_tokens=prompt.sequence.unsqueeze(0),
                     structure_tokens=prompt.structure.unsqueeze(0),
-                    ss8_tokens=prompt.secondary_structure.unsqueeze(0),
-                    sasa_tokens=prompt.sasa.unsqueeze(0),
+                    # ss8_tokens=prompt.secondary_structure.unsqueeze(0),
+                    # sasa_tokens=prompt.sasa.unsqueeze(0),
                     structure_coords=prompt.coordinates.unsqueeze(0),
                 )
                 embeddings = outs.embeddings.cpu().detach().numpy().astype(float)
                 tokens = None
+                print(f"Id {row['id']} complete")
                 yield {
                     'id': row['id'],
                     'sequence': row['sequence'],

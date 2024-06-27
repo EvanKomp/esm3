@@ -14,6 +14,7 @@ stages:
     - data/structures/
     outs:
     - data/embedded_data/
+    - data/clean_data.csv
 
   train_latent_opt_cv:
     # train a small predictor on structure embeddings to predict the label data

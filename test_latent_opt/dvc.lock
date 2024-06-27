@@ -5,23 +5,28 @@ stages:
     deps:
     - path: data/label_data.csv
       hash: md5
-      md5: 75d12e68d13fa398e2be4060bb9c809c
-      size: 71324
+      md5: a7da1dc50083cb5c23a11cffe1af869f
+      size: 71313
     - path: data/structures/
       hash: md5
-      md5: d8a27b3d6146eefb6d193443eb796a3e.dir
-      size: 53232036
-      nfiles: 138
+      md5: 1aa817abd5641cf678098550585e5ade.dir
+      size: 87558061
+      nfiles: 230
     - path: embed_structures.py
       hash: md5
-      md5: a0fd41b48c2b2a2496d24a8e49e81627
-      size: 3686
+      md5: 034f55c2a3a68a329b5c2955e7c86932
+      size: 5933
     params:
       params.yaml:
+        esm.embeddings: esm
         esm.model_name: esm3_sm_open_v1
     outs:
+    - path: data/clean_data.csv
+      hash: md5
+      md5: 2c38859e180cc2aa25fc79470056ff8e
+      size: 71784
     - path: data/embedded_data/
       hash: md5
-      md5: 8381dc8608a49a243cb5f10742adbe7b.dir
-      size: 39825435
+      md5: 35d5cc21afb313419812f7d05d88bcdc.dir
+      size: 832135419
       nfiles: 16
