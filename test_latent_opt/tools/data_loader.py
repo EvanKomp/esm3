@@ -20,6 +20,7 @@ class LatentOptData(Dataset):
     def __init__(self, dataset_dict, include_splits):
         self.dataset_dict = dataset_dict
         self.include_splits = include_splits
+        self.__post_init__()
 
     def __post_init__(self):
         # first compute length
@@ -47,16 +48,17 @@ class LatentOptData(Dataset):
 class LatentOptDataLoader(DataLoader):
     
     def __init__(self, dataset, batch_size, shuffle):
-        super(LatentOptDataLoader, self).__init__(dataset, batch_size=batch_size, shuffle=shuffle)
+        super(LatentOptDataLoader, self).__init__(dataset, batch_size=batch_size, shuffle=shuffle, collate_fn=self.collate_fn)
 
-    def collate_fn(self, batch):
+    @staticmethod
+    def collate_fn(batch):
         # X is a list of tensor
         # each tensor of shape 1, L, D
         # L may be different between tensors
         # we need to pad to the max L
         # and create a mask for positions on which to operate
-        X = batch['z']
-        y = torch.tensor(batch['y']).unsqueeze(1)
+        X = [torch.tensor(e['z']) for e in batch]
+        y = torch.tensor([e['y'] for e in batch]).unsqueeze(1)
 
         # get max L
         max_L = max([x.shape[1] for x in X])
@@ -68,6 +70,6 @@ class LatentOptDataLoader(DataLoader):
             X_padded[i, :L, :] = x
             mask[i, :L] = 1
 
-        return {'z': X_padded, 'mask': mask, 'y': y}
+        return {'X': X_padded, 'mask': mask, 'y': y}
     
     
