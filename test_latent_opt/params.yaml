@@ -4,7 +4,15 @@ esm:
   embeddings: esm # one of structure_vae or esm
 
 latent_model:
-  module: linear
+  module: PoolLinear
+  lr: 0.01
+  optimizer: adam
+  early_stopping_patience: 5
+  early_stopping_tolerance: 0.01
+  epochs: 100
+  dropout: 0.1
+
+
 optimization:
   proteins_to_optimize: []
   num_steps_per_trajectory: 100
